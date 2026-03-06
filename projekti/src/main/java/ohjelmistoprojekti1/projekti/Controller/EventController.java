@@ -3,10 +3,13 @@ package ohjelmistoprojekti1.projekti.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+
 import java.util.List;
 import java.util.Optional;
 
 import ohjelmistoprojekti1.projekti.domain.Event;
+import ohjelmistoprojekti1.projekti.domain.TicketType;
+import ohjelmistoprojekti1.projekti.dto.EventResponse;
 import ohjelmistoprojekti1.projekti.repository.EventRepository;
 
 @RestController
@@ -19,18 +22,48 @@ public class EventController {
         this.eventRepository = eventRepository;
     }
 
+    // Muunna Event -> EventResponse
+    private EventResponse toResponse(Event event) {
+        EventResponse dto = new EventResponse();
+        dto.setId(event.getId());
+        dto.setName(event.getName());
+        dto.setVenue(event.getVenue());
+        dto.setCity(event.getCity());
+        dto.setStartTime(event.getStartTime());
+
+        if (event.getTicketTypes() != null) {
+            List<EventResponse.TicketTypeMini> ticketTypeDtos = event.getTicketTypes().stream()
+                    .map(this::toTicketTypeMini)
+                    .toList();
+            dto.setTicketTypes(ticketTypeDtos);
+        }
+
+        return dto;
+    }
+
+    // Muunna TicketType -> TicketTypeMini
+    private EventResponse.TicketTypeMini toTicketTypeMini(TicketType ticketType) {
+        EventResponse.TicketTypeMini mini = new EventResponse.TicketTypeMini();
+        mini.setId(ticketType.getId());
+        mini.setDescription(ticketType.getDescription());
+        mini.setPrice(ticketType.getPrice());
+        return mini;
+    }
+
     // GET http://localhost:8080/api/events
     @GetMapping
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+    public List<EventResponse> getAllEvents() {
+        return eventRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     // GET http://localhost:8080/api/events/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+    public ResponseEntity<EventResponse> getEventById(@PathVariable Long id) {
         Optional<Event> event = eventRepository.findById(id);
         if (event.isPresent()) {
-            return ResponseEntity.ok(event.get());
+            return ResponseEntity.ok(toResponse(event.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -38,14 +71,14 @@ public class EventController {
 
     // POST http://localhost:8080/api/events
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+    public ResponseEntity<EventResponse> createEvent(@RequestBody Event event) {
         Event savedEvent = eventRepository.save(event);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(savedEvent));
     }
 
     // PUT http://localhost:8080/api/events/{id}
     @PutMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
         Optional<Event> optionalEvent = eventRepository.findById(id);
         if (optionalEvent.isPresent()) {
             Event event = optionalEvent.get();
@@ -53,8 +86,9 @@ public class EventController {
             event.setVenue(eventDetails.getVenue());
             event.setCity(eventDetails.getCity());
             event.setStartTime(eventDetails.getStartTime());
+
             Event updatedEvent = eventRepository.save(event);
-            return ResponseEntity.ok(updatedEvent);
+            return ResponseEntity.ok(toResponse(updatedEvent));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -73,14 +107,21 @@ public class EventController {
 
     // GET http://localhost:8080/api/events/search?name={name}&city={city}
     @GetMapping("/search")
-    public List<Event> searchEvents(@RequestParam(required = false) String name,
-                                    @RequestParam(required = false) String city) {
+    public List<EventResponse> searchEvents(@RequestParam(required = false) String name,
+                                            @RequestParam(required = false) String city) {
+
+        List<Event> events;
+
         if (name != null && !name.isEmpty()) {
-            return eventRepository.findByNameContainingIgnoreCase(name);
+            events = eventRepository.findByNameContainingIgnoreCase(name);
         } else if (city != null && !city.isEmpty()) {
-            return eventRepository.findByCityContainingIgnoreCase(city);
+            events = eventRepository.findByCityContainingIgnoreCase(city);
         } else {
-            return eventRepository.findAll();
+            events = eventRepository.findAll();
         }
+
+        return events.stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

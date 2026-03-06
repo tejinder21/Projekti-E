@@ -1,4 +1,4 @@
-package ohjelmistoprojekti1.projekti.DTO;
+package ohjelmistoprojekti1.projekti.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

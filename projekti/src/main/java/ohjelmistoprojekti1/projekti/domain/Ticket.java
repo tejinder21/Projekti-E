@@ -3,9 +3,12 @@ package ohjelmistoprojekti1.projekti.domain;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 
 @Entity 
+
 public class Ticket {
 
     @Id
@@ -16,6 +19,7 @@ public class Ticket {
     // FK: ticket_type_id -> TicketType.id
     @ManyToOne
     @JoinColumn(name = "ticket_type_id")
+    @JsonIgnore
     // suhde TicketType-tauluun
     // monta Ticketiä voi kuulua yhteen TicketTypeen
     // FK tässä taulussa: ticket_type_id
