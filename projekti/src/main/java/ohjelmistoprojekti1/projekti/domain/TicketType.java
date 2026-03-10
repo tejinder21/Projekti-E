@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+
 @Entity
 public class TicketType {
 
@@ -19,6 +23,7 @@ public class TicketType {
 
     @ManyToOne
     @JoinColumn(name = "event_id")
+    @JsonIgnore
     // FK: event_id -> Event.id
     // monta TicketTypea voi kuulua yhteen Eventiin
     

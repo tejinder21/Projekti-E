@@ -1,9 +1,12 @@
-package ohjelmistoprojekti1.projekti.DTO;
+package ohjelmistoprojekti1.projekti.dto;
+
+import java.util.List;
 
 import java.util.List;
 
 public class CreateSaleRequest {
 
+<<<<<<< HEAD
     private Long sellerId;      
     private Long eventId;       
     private List<SaleItem> items; 
@@ -28,10 +31,15 @@ public class CreateSaleRequest {
             this.quantity = quantity;
         }
     }
+=======
+    private Long sellerId;
+    private List<Long> ticketIds;
+>>>>>>> DTO-testit
 
     public Long getSellerId() {
         return sellerId;
     }
+<<<<<<< HEAD
 
     public void setSellerId(Long sellerId) {
         this.sellerId = sellerId;
@@ -52,4 +60,18 @@ public class CreateSaleRequest {
     public void setItems(List<SaleItem> items) {
         this.items = items;
     }
+=======
+    public void setSellerId(Long sellerId) {this.sellerId = sellerId;}
+
+    public List<Long> getTicketIds() { return ticketIds; }
+    public void setTicketIds(List<Long> ticketIds) { this.ticketIds = ticketIds; }
+
+>>>>>>> DTO-testit
 }
+
+
+
+// Mikä on DTO? 
+
+// DTO on “API:n muoto”, Entity on “tietokannan muoto”.
+// Kun client lähettää JSONin, et halua pakottaa sitä näyttämään täsmälleen entityltä. DTO tekee siitä selkeän.

@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity // tietokantataulu SALE (myyntitapahtuma)
 public class Sale {
 
@@ -19,6 +21,7 @@ public class Sale {
     // FK: seller_id -> AppUser.id
     @ManyToOne
     @JoinColumn(name = "seller_id")
+    @JsonIgnore
     // suhde käyttäjään (myyjään)
     // monta Salea voi kuulua yhdelle AppUserille
     // FK on tässä taulussa: seller_id

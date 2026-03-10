@@ -1,20 +1,17 @@
 package ohjelmistoprojekti1.projekti.Controller;
 
-import java.time.LocalDateTime;
+
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import ohjelmistoprojekti1.projekti.domain.Ticket;
+import ohjelmistoprojekti1.projekti.domain.TicketType;
+import ohjelmistoprojekti1.projekti.dto.CreateTicketRequest;
 import ohjelmistoprojekti1.projekti.repository.TicketRepository;
+import ohjelmistoprojekti1.projekti.repository.TicketTypeRepository;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -22,46 +19,40 @@ public class TicketController {
 
     private final TicketRepository ticketRepository;
 
-    public TicketController(TicketRepository ticketRepository) {
+    private final TicketTypeRepository ticketTypeRepository;
+
+    public TicketController(TicketRepository ticketRepository, TicketTypeRepository ticketTypeRepository) {
         this.ticketRepository = ticketRepository;
+        this.ticketTypeRepository = ticketTypeRepository;
     }
 
-    // GET /api/tickets/{code} - Hae lippu sen koodin perusteella (ovella tarkastuksessa)
-    @GetMapping("/{code}")
-    public ResponseEntity<Ticket> getTicketByCode(@PathVariable String code) {
-        Optional<Ticket> ticket = ticketRepository.findByCode(code);
-        return ticket.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    // GET /api/tickets - Hae kaikki liput (vaatii filterin status perusteella)
     @GetMapping
-    public List<Ticket> getAllTickets(@RequestParam(required = false) String status) {
-        if (status != null && !status.isEmpty()) {
-            return ticketRepository.findByStatus(status);
-        }
+    public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
     }
 
-    // PUT /api/tickets/{code}/use - Merkitse lippu käytetyksi
-    @PutMapping("/{code}/use")
-    public ResponseEntity<Ticket> useTicket(@PathVariable String code) {
-        Optional<Ticket> ticketOpt = ticketRepository.findByCode(code);
-
-        if (ticketOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    @PostMapping
+    public ResponseEntity<?> createTicket(@RequestBody CreateTicketRequest req) {
+        if (req.getTicketTypeId() == null
+                || req.getCode() == null || req.getCode().isBlank()
+                || req.getStatus() == null || req.getStatus().isBlank()) {
+            return ResponseEntity.badRequest().body("ticketTypeId, code and status are required");
         }
 
-        Ticket ticket = ticketOpt.get();
-
-        if ("USED".equals(ticket.getStatus())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Lippu on jo käytetty
+        TicketType tt = ticketTypeRepository.findById(req.getTicketTypeId()).orElse(null);
+        if (tt == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("TicketType not found: " + req.getTicketTypeId());
         }
 
-        
-        ticket.setStatus("USED");
-        ticket.setUsedAt(LocalDateTime.now());
-        Ticket updatedTicket = ticketRepository.save(ticket);
+        Ticket ticket = new Ticket();
+        ticket.setTicketType(tt);
+        ticket.setCode(req.getCode());
+        ticket.setStatus(req.getStatus());
+        // sale jätetään nulliksi (ei myyty vielä)
+        // usedAt jätetään nulliksi
 
-        return ResponseEntity.ok(updatedTicket);
+        Ticket saved = ticketRepository.save(ticket);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 }
+

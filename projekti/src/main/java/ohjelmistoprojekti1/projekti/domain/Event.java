@@ -2,6 +2,9 @@ package ohjelmistoprojekti1.projekti.domain;
 
 import jakarta.persistence.*;
 import java.util.List;
+
+
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +21,7 @@ public class Event {
     private LocalDateTime startTime;
 
     @OneToMany(mappedBy = "event")
+    
     // suhde TicketType-tauluun
     // 1 Event -> monta TicketTypea (*)
     private List<TicketType> ticketTypes;
