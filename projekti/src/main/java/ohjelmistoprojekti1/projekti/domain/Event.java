@@ -1,9 +1,8 @@
 package ohjelmistoprojekti1.projekti.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.util.List;
-
-
 
 import java.time.LocalDateTime;
 
@@ -15,13 +14,25 @@ public class Event {
     private Long id;
 
     // sarakkeet: name, venue, city, start_time
+
+    @NotBlank(message = "Tapahtuman nimi ei voi olla tyhjä")
+    @Size(min = 2, max = 100, message = "Nimen täytyy olla 2-100 merkkiä pitkä")
     private String name;
+
+    @NotBlank(message = "Tapahtumapaikka vaaditaan")
+    @Size(max = 100)
     private String venue;
+
+    @NotBlank(message = "Kaupunki vaaditaan")
+    @Size(max = 50)
     private String city;
+
+    @NotNull(message = "Aloitusaika vaaditaan")
+    @FutureOrPresent(message = "Aloitusaika ei voi olla menneisyydessä")
     private LocalDateTime startTime;
 
     @OneToMany(mappedBy = "event")
-    
+
     // suhde TicketType-tauluun
     // 1 Event -> monta TicketTypea (*)
     private List<TicketType> ticketTypes;

@@ -1,6 +1,9 @@
 package ohjelmistoprojekti1.projekti.Controller;
 
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
@@ -71,14 +74,14 @@ public class EventController {
 
     // POST http://localhost:8080/api/events
     @PostMapping
-    public ResponseEntity<EventResponse> createEvent(@RequestBody Event event) {
+    public ResponseEntity<EventResponse> createEvent(@Valid @RequestBody Event event) {
         Event savedEvent = eventRepository.save(event);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(savedEvent));
     }
 
     // PUT http://localhost:8080/api/events/{id}
     @PutMapping("/{id}")
-    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @Valid @RequestBody Event eventDetails) {
         Optional<Event> optionalEvent = eventRepository.findById(id);
         if (optionalEvent.isPresent()) {
             Event event = optionalEvent.get();
@@ -108,7 +111,7 @@ public class EventController {
     // GET http://localhost:8080/api/events/search?name={name}&city={city}
     @GetMapping("/search")
     public List<EventResponse> searchEvents(@RequestParam(required = false) String name,
-                                            @RequestParam(required = false) String city) {
+            @RequestParam(required = false) String city) {
 
         List<Event> events;
 
