@@ -1,4 +1,4 @@
-## Työjono (viikko X)
+## Työjono
 
 ### HTTP Basic Authentication
 
