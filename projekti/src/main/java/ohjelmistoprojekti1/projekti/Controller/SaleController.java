@@ -8,12 +8,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import ohjelmistoprojekti1.projekti.dto.CreateSaleRequest;
 import ohjelmistoprojekti1.projekti.dto.SaleResponse;
@@ -36,8 +31,10 @@ public class SaleController {
     private final AppUserRepository appUserRepository;
     private final TicketTypeRepository ticketTypeRepository;
 
-    public SaleController(SaleRepository saleRepository, TicketRepository ticketRepository,
-            AppUserRepository appUserRepository, TicketTypeRepository ticketTypeRepository) {
+    public SaleController(SaleRepository saleRepository,
+                          TicketRepository ticketRepository,
+                          AppUserRepository appUserRepository,
+                          TicketTypeRepository ticketTypeRepository) {
         this.saleRepository = saleRepository;
         this.ticketRepository = ticketRepository;
         this.appUserRepository = appUserRepository;
@@ -47,35 +44,46 @@ public class SaleController {
     // POST /api/sales - Luo uuden myyntitapahtuman ja luo automaattisesti liput
     @PostMapping
     public ResponseEntity<SaleResponse> createSale(@RequestBody CreateSaleRequest request) {
-        
         try {
-            
-            if (request.getSellerId() == null || request.getEventId() == null || 
-                request.getItems() == null || request.getItems().isEmpty()) {
+            // Tarkistetaan pakolliset kentät
+            if (request.getSellerId() == null ||
+                request.getEventId() == null ||
+                request.getItems() == null ||
+                request.getItems().isEmpty()) {
                 return ResponseEntity.badRequest().build();
             }
 
-           
+            // Haetaan myyjä
             AppUser seller = appUserRepository.findById(request.getSellerId())
                     .orElseThrow(() -> new RuntimeException("Myyjä ei löytynyt"));
+
+            // Luodaan myynti ja tallennetaan se ensin
             Sale sale = new Sale();
             sale.setCreatedAt(LocalDateTime.now());
             sale.setSeller(seller);
+            sale.setTotalAmount(BigDecimal.ZERO);
+
+            Sale savedSale = saleRepository.save(sale);
 
             BigDecimal totalAmount = BigDecimal.ZERO;
             List<Long> createdTicketIds = new ArrayList<>();
 
+            // Luodaan liput items-listan perusteella
             for (CreateSaleRequest.SaleItem item : request.getItems()) {
-                TicketType ticketType = ticketTypeRepository.findById(item.getTicketTypeId())
-                        .orElseThrow(() -> new RuntimeException("Lipputyyppi ei löytynyt: " + item.getTicketTypeId()));
+                if (item.getTicketTypeId() == null || item.getQuantity() <= 0) {
+                    return ResponseEntity.badRequest().build();
+                }
 
-         
+                TicketType ticketType = ticketTypeRepository.findById(item.getTicketTypeId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Lipputyyppi ei löytynyt: " + item.getTicketTypeId()));
+
                 for (int i = 0; i < item.getQuantity(); i++) {
                     Ticket ticket = new Ticket();
                     ticket.setTicketType(ticketType);
                     ticket.setCode(TicketCodeGenerator.generateCode());
                     ticket.setStatus("VALID");
-                    ticket.setSale(sale);
+                    ticket.setSale(savedSale);
 
                     Ticket savedTicket = ticketRepository.save(ticket);
                     createdTicketIds.add(savedTicket.getId());
@@ -84,13 +92,11 @@ public class SaleController {
                 }
             }
 
-            
-            sale.setTotalAmount(totalAmount);
+            // Päivitetään myynnin kokonaissumma
+            savedSale.setTotalAmount(totalAmount);
+            saleRepository.save(savedSale);
 
-           
-            Sale savedSale = saleRepository.save(sale);
-
-           
+            // Muodostetaan vastaus
             SaleResponse response = new SaleResponse();
             response.setId(savedSale.getId());
             response.setCreatedAt(savedSale.getCreatedAt());
@@ -98,9 +104,10 @@ public class SaleController {
             response.setSellerId(seller.getId());
             response.setTicketIds(createdTicketIds);
 
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }
@@ -115,6 +122,7 @@ public class SaleController {
     @GetMapping("/{id}")
     public ResponseEntity<Sale> getSaleById(@PathVariable Long id) {
         Optional<Sale> sale = saleRepository.findById(id);
-        return sale.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return sale.map(ResponseEntity::ok)
+                   .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

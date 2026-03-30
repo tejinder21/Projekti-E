@@ -1,31 +1,21 @@
-# Työjono (Product Backlog)
+## Työjono
 
-### 1. Tapahtuman lisääminen
-- POST /api/events
-- Tallenna tapahtuma tietokantaan
-- Testaa toiminta
+### HTTP Basic Authentication
 
-### 2. Tapahtumien hakeminen
-- GET /api/events
-- Hae kaikki tapahtumat
-- Testaa toiminta
+- Selvitetään, miten Spring Security lisätään projektiin  
+- Tehdään SecurityConfig-luokka  
+- Suojataan /api/** endpointit Basic Authenticationilla  
+- Luodaan in-memory-käyttäjät (esim. admin, seller, checker)  
+- Poistetaan CSRF käytöstä, jotta Postman-testaus toimii  
 
-### 3. Yksittäisen tapahtuman haku
-- GET /api/events/{id}
-- Hae tapahtuma ID:n perusteella
-- Testaa toiminta
+### Testaus
 
-### 4. Tapahtuman muokkaaminen
-- PUT /api/events/{id}
-- Päivitä tapahtuma
-- Testaa toiminta
+- Testataan Postmanilla:
+  - ilman tunnuksia → 401 Unauthorized  
+  - väärillä tunnuksilla → 401 Unauthorized  
+  - oikeilla tunnuksilla → pyyntö onnistuu  
 
-### 5. Tapahtuman poistaminen
-- DELETE /api/events/{id}
-- Poista tapahtuma
-- Testaa toiminta
+### Viimeistely
 
-### 6. API-dokumentaatio
-- Base URL
-- Endpointit
-- Request ja response
+- Korjataan mahdolliset virheet  
+- Varmistetaan, että autentikointi toimii kaikkien tarvittavien endpointtien kanssa  

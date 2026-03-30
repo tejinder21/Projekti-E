@@ -17,7 +17,7 @@ public class Ticket {
     // FK: ticket_type_id -> TicketType.id
     @ManyToOne
     @JoinColumn(name = "ticket_type_id")
-    @JsonIgnore
+    @JsonIgnore //  estää TicketType <-> Ticket loopin
     // suhde TicketType-tauluun
     // monta Ticketiä voi kuulua yhteen TicketTypeen
     // FK tässä taulussa: ticket_type_id
@@ -27,6 +27,7 @@ public class Ticket {
 
     @ManyToOne
     @JoinColumn(name = "sale_id", nullable = true)
+    @JsonIgnore //  estää Sale <-> Ticket loopin
     // suhde Sale-tauluun
     // yksi myynti voi sisältää monta lippua
     // mutta lippu voi olla myös ilman myyntiä (esim. ovilippu)

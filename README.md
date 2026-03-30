@@ -289,3 +289,39 @@ PUT /api/events/{id}
 PUT http://localhost:8080/api/events/1
 
 
+
+## MySQL-tietokannan käyttöönotto
+
+Tässä vaiheessa siirryttiin käyttämään oikeaa tietokantaa (MySQL) aiemmin käytössä olleen H2-muistitietokannan sijaan. Tavoitteena oli saada sovellus käyttämään pysyvää tietokantaa, jotta data ei katoa sovelluksen uudelleenkäynnistyksen yhteydessä.
+
+### Mitä tehtiin
+
+Aluksi MySQL asennettiin paikalliseen kehitysympäristöön ja käynnistettiin. Tämän jälkeen luotiin uusi tietokanta nimeltä `lipputietokanta`.
+
+Spring Boot -projektiin lisättiin MySQL-ajuri (`mysql-connector-j`) `pom.xml`-tiedostoon. Sen jälkeen projektiin tehtiin erillinen konfiguraatiotiedosto `application-mysql.properties`, johon määriteltiin tietokannan yhteystiedot (URL, käyttäjätunnus ja salasana).
+
+Lisäksi projektiin luotiin kaksi eri profiilia:
+- `dev` → käyttää H2-tietokantaa
+- `mysql` → käyttää MySQL-tietokantaa
+
+`application.properties`-tiedostossa asetettiin aktiiviseksi profiiliksi `mysql`, jolloin sovellus käyttää MySQL:ää käynnistyessään.
+
+Sovellus käynnistettiin ja varmistettiin lokista, että yhteys MySQL-tietokantaan muodostui onnistuneesti. Hibernate loi tarvittavat taulut automaattisesti.
+
+Toiminta testattiin lisäämällä dataa sovellukseen (Postmanin kautta) ja tarkistamalla MySQL:stä, että tiedot tallentuivat oikein. Lisäksi varmistettiin, että data säilyy sovelluksen uudelleenkäynnistyksen jälkeen.
+
+### Miten paikallinen palvelin saadaan käyttämään tietokantaa
+
+Paikallinen palvelin saadaan käyttämään MySQL-tietokantaa seuraavilla toimenpiteillä:
+- asennetaan ja käynnistetään MySQL
+- luodaan tietokanta
+- lisätään projektiin MySQL-ajuri
+- määritellään yhteysasetukset `application-mysql.properties`-tiedostoon
+- aktivoidaan `mysql`-profiili
+- käynnistetään sovellus
+
+### Miten voidaan vaihtaa takaisin H2-tietokantaan
+
+Tietokantaa voidaan vaihtaa helposti Spring Boot -profiilien avulla ilman muutoksia koodiin.
+
+Jos halutaan käyttää H2-tietokantaa, vaihdetaan `application.properties`-tiedostossa aktiivinen profiili:
