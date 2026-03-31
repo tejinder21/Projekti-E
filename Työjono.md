@@ -35,3 +35,10 @@
 - Käynnistä backend MySQLä
 - Testaa että sovellus käynnistyy ilman virheitä
 - Testaa CRUD endpoint toimii
+
+### Dokumentaatio
+
+- Kirjoita: miten MySQL otetaan käyttöön
+- Kirjoita: miten vaihdetaan takaisin H2
+- Kirjoita API-dokumentaatio
+- Päivitä README.md
