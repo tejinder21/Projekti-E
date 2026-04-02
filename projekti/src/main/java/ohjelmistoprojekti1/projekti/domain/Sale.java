@@ -28,6 +28,14 @@ public class Sale {
 
     private AppUser seller;
 
+    @ManyToOne
+    @JoinColumn(name = "event_id")
+    @JsonIgnore
+    // suhde tapahtumaan
+    // monta Salea voi kuulua yhteen Eventtiin
+    // FK on tässä taulussa: event_id
+    private Event event;
+
     // Yksi myyntitapahtuma sisältää monta lippua.
     @OneToMany(mappedBy = "sale")
     // 1 Sale -> monta Ticketiä (*)
@@ -74,4 +82,13 @@ public class Sale {
     public void setTickets(List<Ticket> tickets) {
         this.tickets = tickets;
     }
+    public Event getEvent() {
+        return event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
+
+   
 }
