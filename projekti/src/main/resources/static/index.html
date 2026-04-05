@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <title>Lipun tarkastus</title>
+</head>
+<body>
+
+    <h2>Lipun tarkastus</h2>
+
+    <input id="code" placeholder="Anna lippukoodi">
+    <button onclick="fetchTicket()">Hae lippu</button>
+
+    <br><br>
+
+    <button onclick="useTicket()">Merkitse käytetyksi</button>
+
+    <h3>Tulos:</h3>
+    <pre id="result"></pre>
+
+    <script>
+        let currentTicketId = null;
+
+        const username = "admin";
+        const password = "admin123";
+        const basicAuth = "Basic " + btoa(username + ":" + password);
+
+        const API_URL = "http://localhost:8080/api/tickets";
+
+        function fetchTicket() {
+            const code = document.getElementById("code").value;
+
+            fetch(`${API_URL}?code=${code}`, {
+                headers: {
+                    "Authorization": basicAuth
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").textContent =
+                    JSON.stringify(data, null, 2);
+
+                currentTicketId = data.id;
+            })
+            .catch(error => {
+                document.getElementById("result").textContent = error;
+            });
+        }
+
+        function useTicket() {
+            if (!currentTicketId) {
+                alert("Hae lippu ensin!");
+                return;
+            }
+
+            fetch(`${API_URL}/${currentTicketId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": basicAuth
+                },
+                body: JSON.stringify({
+                    used: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").textContent =
+                    JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                document.getElementById("result").textContent = error;
+            });
+        }
+    </script>
+
+</body>
+</html>
