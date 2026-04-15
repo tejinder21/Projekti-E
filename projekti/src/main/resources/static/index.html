@@ -2,77 +2,227 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>Lipun tarkastus</title>
+    <title>TicketGuru - Lipunmyynti</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #2c7be5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1a68d1;
+        }
+
+        pre {
+            background: #f1f3f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .result-title {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
-    <h2>Lipun tarkastus</h2>
+<div class="container">
+    <h2>🎟️ TicketGuru Lipunmyynti</h2>
 
-    <input id="code" placeholder="Anna lippukoodi">
-    <button onclick="fetchTicket()">Hae lippu</button>
+    <label for="seller">Myyjä</label>
+    <select id="seller"></select>
 
-    <br><br>
+    <label for="event">Tapahtuma</label>
+    <select id="event" onchange="updateTicketTypes()"></select>
 
-    <button onclick="useTicket()">Merkitse käytetyksi</button>
+    <label for="ticketType">Lipputyyppi</label>
+    <select id="ticketType"></select>
 
-    <h3>Tulos:</h3>
+    <label for="quantity">Määrä</label>
+    <input id="quantity" type="number" min="1" value="1">
+
+    <button onclick="createSale()">Myy liput</button>
+
+    <div class="result-title">Tulos:</div>
     <pre id="result"></pre>
+</div>
 
-    <script>
-        let currentTicketId = null;
+<script>
+    const username = "admin";
+    const password = "admin123";
+    const basicAuth = "Basic " + btoa(username + ":" + password);
 
-        const username = "admin";
-        const password = "admin123";
-        const basicAuth = "Basic " + btoa(username + ":" + password);
+    const BASE_URL = "https://projekti-e-9.onrender.com/api";
+    let eventsData = [];
 
-        const API_URL = "https://projekti-e-9.onrender.com/api/tickets";
+    window.onload = function () {
+        loadUsers();
+        loadEvents();
+    };
 
-        function fetchTicket() {
-            const code = document.getElementById("code").value;
+    function getHeaders() {
+        return {
+            "Content-Type": "application/json",
+            "Authorization": basicAuth
+        };
+    }
 
-            fetch(`${API_URL}?code=${code}`, {
-                headers: {
-                    "Authorization": basicAuth
+    function loadUsers() {
+        fetch(`${BASE_URL}/users`, {
+            headers: { "Authorization": basicAuth }
+        })
+        .then(response => response.json())
+        .then(users => {
+            const sellerSelect = document.getElementById("seller");
+            sellerSelect.innerHTML = "";
+
+            users.forEach(user => {
+                const option = document.createElement("option");
+                option.value = user.id;
+                option.textContent = `${user.username} (${user.role})`;
+                sellerSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            document.getElementById("result").textContent =
+                "Virhe käyttäjien haussa: " + error;
+        });
+    }
+
+    function loadEvents() {
+        fetch(`${BASE_URL}/events`, {
+            headers: { "Authorization": basicAuth }
+        })
+        .then(response => response.json())
+        .then(events => {
+            eventsData = events;
+            const eventSelect = document.getElementById("event");
+            eventSelect.innerHTML = "";
+
+            events.forEach(event => {
+                const option = document.createElement("option");
+                option.value = event.id;
+                option.textContent = `${event.name} - ${event.city}`;
+                eventSelect.appendChild(option);
+            });
+
+            updateTicketTypes();
+        })
+        .catch(error => {
+            document.getElementById("result").textContent =
+                "Virhe tapahtumien haussa: " + error;
+        });
+    }
+
+    function updateTicketTypes() {
+        const eventId = parseInt(document.getElementById("event").value);
+        const ticketTypeSelect = document.getElementById("ticketType");
+        ticketTypeSelect.innerHTML = "";
+
+        const selectedEvent = eventsData.find(event => event.id === eventId);
+
+        if (!selectedEvent || !selectedEvent.ticketTypes) {
+            return;
+        }
+
+        selectedEvent.ticketTypes.forEach(ticketType => {
+            const option = document.createElement("option");
+            option.value = ticketType.id;
+            option.textContent =
+                `${ticketType.description} - ${ticketType.price} €`;
+            ticketTypeSelect.appendChild(option);
+        });
+    }
+
+    function createSale() {
+        const sellerId = parseInt(document.getElementById("seller").value);
+        const eventId = parseInt(document.getElementById("event").value);
+        const ticketTypeId = parseInt(document.getElementById("ticketType").value);
+        const quantity = parseInt(document.getElementById("quantity").value);
+
+        if (!sellerId || !eventId || !ticketTypeId || quantity < 1) {
+            alert("Tarkista syötetyt tiedot.");
+            return;
+        }
+
+        const saleData = {
+            sellerId: sellerId,
+            eventId: eventId,
+            items: [
+                {
+                    ticketTypeId: ticketTypeId,
+                    quantity: quantity
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").textContent =
-                    JSON.stringify(data, null, 2);
+            ]
+        };
 
-                currentTicketId = data.id;
-            })
-            .catch(error => {
-                document.getElementById("result").textContent = error;
-            });
-        }
-
-        function useTicket() {
-            if (!currentTicketId) {
-                alert("Hae lippu ensin!");
-                return;
+        fetch(`${BASE_URL}/sales`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify(saleData)
+        })
+        .then(async response => {
+            if (!response.ok) {
+                throw new Error("Myynti epäonnistui: " + response.status);
             }
-
-            fetch(`${API_URL}/${currentTicketId}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": basicAuth
-                },
-                body: JSON.stringify({
-                    used: new Date().toISOString()
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").textContent =
-                    JSON.stringify(data, null, 2);
-            })
-            .catch(error => {
-                document.getElementById("result").textContent = error;
-            });
-        }
-    </script>
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("result").textContent =
+                JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById("result").textContent =
+                "Virhe myynnissä: " + error;
+        });
+    }
+</script>
 
 </body>
 </html>
