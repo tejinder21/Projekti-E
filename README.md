@@ -325,3 +325,108 @@ Paikallinen palvelin saadaan käyttämään MySQL-tietokantaa seuraavilla toimen
 Tietokantaa voidaan vaihtaa helposti Spring Boot -profiilien avulla ilman muutoksia koodiin.
 
 Jos halutaan käyttää H2-tietokantaa, vaihdetaan `application.properties`-tiedostossa aktiivinen profiili:
+
+
+# 🎟️ TicketGuru – Lipunmyyntijärjestelmä
+
+TicketGuru on Spring Boot -pohjainen lipunmyyntijärjestelmä, jonka avulla voidaan hallita tapahtumia, lipputyyppejä, käyttäjiä ja lippujen myyntiä. Projekti sisältää REST API:n, tietokantaintegraation sekä selainpohjaisen lipunmyynticlientin.
+
+Tämä projekti on toteutettu osana ohjelmistokehitysprojektia.
+
+---
+
+## 🌐 Julkaistu sovellus
+
+**Lipunmyynticlient:**
+🔗 https://projekti-e-9.onrender.com/index.html
+
+**Backend API:**
+🔗 https://projekti-e-9.onrender.com/api
+
+**GitHub-repositorio:**
+🔗 https://github.com/JoelRegner/Projekti-E
+
+---
+
+##  Kuvakaappaus lipunmyynticlientista
+
+![alt text](client.jpeg)
+
+
+---
+
+## 🚀 Projektin ominaisuudet
+
+- Tapahtumien hallinta
+- Lipputyyppien hallinta
+- Lippujen myynti ja tarkastus
+- Käyttäjien hallinta
+- REST API Spring Bootilla
+- Selainpohjainen lipunmyynticlient
+- Basic Authentication -tunnistautuminen
+- PostgreSQL-, MySQL- ja H2-tietokantatuki
+- Automaattiset yksikkö- ja integraatiotestit
+
+---
+
+## 🖥️ Lipunmyynticlient
+
+TicketGuru sisältää yksinkertaisen MVP-tasoisen clientin, jolla voidaan myydä lippuja tapahtumiin.
+
+### Toiminnallisuudet
+- Myyjien haku järjestelmästä
+- Tapahtumien valinta
+- Lipputyyppien valinta
+- Lippujen määrän syöttäminen
+- Lipunmyynnin suorittaminen
+- Myyntituloksen näyttäminen
+
+### Käytetyt teknologiat
+- HTML5
+- CSS3
+- JavaScript
+- Fetch API
+- Spring Boot REST API
+
+
+---
+
+## 🔐 Autentikointi
+
+Sovellus käyttää Basic Authentication -tunnistautumista.
+
+| Käyttäjä | Salasana | Rooli |
+|----------|----------|-------|
+| admin | admin123 | ADMIN |
+| seller | seller123 | LIPUNMYYJÄ |
+| checker | checker123 | OVITARKASTAJA |
+
+---
+
+## 📡 REST API -rajapinnat
+
+| Metodi | Endpoint | Kuvaus |
+|--------|----------|--------|
+| GET | `/api/events` | Hakee tapahtumat |
+| POST | `/api/events` | Luo tapahtuman |
+| GET | `/api/tickettypes` | Hakee lipputyypit |
+| POST | `/api/tickettypes` | Luo lipputyypin |
+| GET | `/api/tickets` | Hakee liput |
+| PATCH | `/api/tickets/{id}` | Merkitsee lipun käytetyksi |
+| GET | `/api/users` | Hakee käyttäjät |
+| POST | `/api/users` | Luo käyttäjän |
+| GET | `/api/sales` | Hakee myynnit |
+| POST | `/api/sales` | Luo lipunmyynnin |
+
+### Esimerkkipyyntö lipunmyynnin luomiseksi
+```json
+{
+  "sellerId": 1,
+  "eventId": 1,
+  "items": [
+    {
+      "ticketTypeId": 1,
+      "quantity": 2
+    }
+  ]
+}
