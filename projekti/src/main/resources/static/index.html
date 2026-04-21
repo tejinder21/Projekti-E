@@ -62,11 +62,23 @@
             padding: 10px;
             border-radius: 4px;
             overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .result-title {
             margin-top: 20px;
             font-weight: bold;
+        }
+
+        .summary {
+            margin-top: 15px;
+            padding: 12px;
+            background: #eef4ff;
+            border-radius: 6px;
+            border: 1px solid #c9ddff;
+            font-weight: bold;
+            color: #1f3f75;
         }
     </style>
 </head>
@@ -88,6 +100,9 @@
     <input id="quantity" type="number" min="1" value="1">
 
     <button onclick="createSale()">Myy liput</button>
+
+    <div class="result-title">Yhteenveto:</div>
+    <div id="saleSummary" class="summary">Ei vielä myyntiä.</div>
 
     <div class="result-title">Tulos:</div>
     <pre id="result"></pre>
@@ -117,7 +132,12 @@
         fetch(`${BASE_URL}/users`, {
             headers: { "Authorization": basicAuth }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Käyttäjien haku epäonnistui: " + response.status);
+            }
+            return response.json();
+        })
         .then(users => {
             const sellerSelect = document.getElementById("seller");
             sellerSelect.innerHTML = "";
@@ -131,7 +151,7 @@
         })
         .catch(error => {
             document.getElementById("result").textContent =
-                "Virhe käyttäjien haussa: " + error;
+                "Virhe käyttäjien haussa: " + error.message;
         });
     }
 
@@ -139,7 +159,12 @@
         fetch(`${BASE_URL}/events`, {
             headers: { "Authorization": basicAuth }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Tapahtumien haku epäonnistui: " + response.status);
+            }
+            return response.json();
+        })
         .then(events => {
             eventsData = events;
             const eventSelect = document.getElementById("event");
@@ -156,7 +181,7 @@
         })
         .catch(error => {
             document.getElementById("result").textContent =
-                "Virhe tapahtumien haussa: " + error;
+                "Virhe tapahtumien haussa: " + error.message;
         });
     }
 
@@ -174,8 +199,9 @@
         selectedEvent.ticketTypes.forEach(ticketType => {
             const option = document.createElement("option");
             option.value = ticketType.id;
-            option.textContent =
-                `${ticketType.description} - ${ticketType.price} €`;
+            option.textContent = `${ticketType.description} - ${ticketType.price} €`;
+            option.dataset.description = ticketType.description;
+            option.dataset.price = ticketType.price;
             ticketTypeSelect.appendChild(option);
         });
     }
@@ -190,6 +216,22 @@
             alert("Tarkista syötetyt tiedot.");
             return;
         }
+
+        const selectedEvent = eventsData.find(event => event.id === eventId);
+        if (!selectedEvent) {
+            document.getElementById("result").textContent =
+                "Virhe: valittua tapahtumaa ei löytynyt.";
+            return;
+        }
+
+        const selectedTicketType = selectedEvent.ticketTypes.find(tt => tt.id === ticketTypeId);
+        if (!selectedTicketType) {
+            document.getElementById("result").textContent =
+                "Virhe: valittua lipputyyppiä ei löytynyt.";
+            return;
+        }
+
+        const lineTotal = Number(selectedTicketType.price) * quantity;
 
         const saleData = {
             sellerId: sellerId,
@@ -208,18 +250,29 @@
             body: JSON.stringify(saleData)
         })
         .then(async response => {
+            const responseText = await response.text();
+
             if (!response.ok) {
-                throw new Error("Myynti epäonnistui: " + response.status);
+                throw new Error("Myynti epäonnistui: " + response.status + " " + responseText);
             }
-            return response.json();
+
+            try {
+                return JSON.parse(responseText);
+            } catch (e) {
+                throw new Error("Palvelin palautti virheellisen JSON-vastauksen.");
+            }
         })
         .then(data => {
+            document.getElementById("saleSummary").textContent =
+                `Myyty ${quantity} x ${selectedTicketType.description}, yhteensä ${lineTotal} € tapahtumaan "${selectedEvent.name}".`;
+
             document.getElementById("result").textContent =
                 JSON.stringify(data, null, 2);
         })
         .catch(error => {
+            document.getElementById("saleSummary").textContent = "Myynti ei onnistunut.";
             document.getElementById("result").textContent =
-                "Virhe myynnissä: " + error;
+                "Virhe myynnissä: " + error.message;
         });
     }
 </script>
