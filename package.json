@@ -1,0 +1,22 @@
+{
+  "name": "projekti-e",
+  "version": "1.0.0",
+  "description": "Tiimi: Aitanova Azaliia, Karppinen-van Drongelen Riikka, Kumar Tejinder, Nguyen Khoa, Paajaste Maximus, Regnér Joel",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoelRegner/Projekti-E.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JoelRegner/Projekti-E/issues"
+  },
+  "homepage": "https://github.com/JoelRegner/Projekti-E#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0"
+  }
+}
