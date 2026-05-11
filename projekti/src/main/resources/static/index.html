@@ -84,6 +84,27 @@
 </head>
 <body>
 
+    <button onclick="logout()">Kirjaudu ulos</button>
+
+<div id="adminPanel" style="display:none; margin-top:30px;">
+    <h2>Admin-toiminnot</h2>
+
+    <label for="newUsername">Uusi käyttäjätunnus</label>
+    <input id="newUsername" type="text">
+
+    <label for="newPassword">Salasana</label>
+    <input id="newPassword" type="password">
+
+    <label for="newRole">Rooli</label>
+    <select id="newRole">
+        <option value="ADMIN">ADMIN</option>
+        <option value="LIPUNMYYJÄ">LIPUNMYYJÄ</option>
+        <option value="OVITARKASTAJA">OVITARKASTAJA</option>
+    </select>
+
+    <button onclick="createUser()">Luo käyttäjä</button>
+</div>
+
 <div class="container">
     <h2>🎟️ TicketGuru Lipunmyynti</h2>
 
@@ -109,14 +130,20 @@
 </div>
 
 <script>
-    const username = "admin";
-    const password = "admin123";
-    const basicAuth = "Basic " + btoa(username + ":" + password);
+    const token = localStorage.getItem("auth");
+    const loggedUsername = localStorage.getItem("username");
 
-    const BASE_URL = "https://projekti-e-9.onrender.com/api";
+    if (!token) {
+        window.location.href = "/login.html";
+    }
+
+    const basicAuth = "Basic " + token;
+    const BASE_URL = "/api";
+
     let eventsData = [];
 
     window.onload = function () {
+        loadCurrentUser();
         loadUsers();
         loadEvents();
     };
@@ -126,6 +153,29 @@
             "Content-Type": "application/json",
             "Authorization": basicAuth
         };
+    }
+
+    function logout() {
+        localStorage.removeItem("auth");
+        localStorage.removeItem("username");
+        window.location.href = "/login.html";
+    }
+
+    function loadCurrentUser() {
+        fetch(`${BASE_URL}/users`, {
+            headers: { "Authorization": basicAuth }
+        })
+        .then(response => response.json())
+        .then(users => {
+            const currentUser = users.find(user => user.username === loggedUsername);
+
+            if (currentUser && currentUser.role === "ADMIN") {
+                document.getElementById("adminPanel").style.display = "block";
+            }
+        })
+        .catch(error => {
+            console.error("Käyttäjän roolin haku epäonnistui:", error);
+        });
     }
 
     function loadUsers() {
@@ -200,8 +250,6 @@
             const option = document.createElement("option");
             option.value = ticketType.id;
             option.textContent = `${ticketType.description} - ${ticketType.price} €`;
-            option.dataset.description = ticketType.description;
-            option.dataset.price = ticketType.price;
             ticketTypeSelect.appendChild(option);
         });
     }
@@ -218,18 +266,7 @@
         }
 
         const selectedEvent = eventsData.find(event => event.id === eventId);
-        if (!selectedEvent) {
-            document.getElementById("result").textContent =
-                "Virhe: valittua tapahtumaa ei löytynyt.";
-            return;
-        }
-
         const selectedTicketType = selectedEvent.ticketTypes.find(tt => tt.id === ticketTypeId);
-        if (!selectedTicketType) {
-            document.getElementById("result").textContent =
-                "Virhe: valittua lipputyyppiä ei löytynyt.";
-            return;
-        }
 
         const lineTotal = Number(selectedTicketType.price) * quantity;
 
@@ -256,11 +293,7 @@
                 throw new Error("Myynti epäonnistui: " + response.status + " " + responseText);
             }
 
-            try {
-                return JSON.parse(responseText);
-            } catch (e) {
-                throw new Error("Palvelin palautti virheellisen JSON-vastauksen.");
-            }
+            return JSON.parse(responseText);
         })
         .then(data => {
             document.getElementById("saleSummary").textContent =
@@ -273,6 +306,41 @@
             document.getElementById("saleSummary").textContent = "Myynti ei onnistunut.";
             document.getElementById("result").textContent =
                 "Virhe myynnissä: " + error.message;
+        });
+    }
+
+    function createUser() {
+        const username = document.getElementById("newUsername").value;
+        const password = document.getElementById("newPassword").value;
+        const role = document.getElementById("newRole").value;
+
+        if (!username || !password || !role) {
+            alert("Täytä kaikki käyttäjän tiedot.");
+            return;
+        }
+
+        const userData = {
+            username: username,
+            password: password,
+            role: role
+        };
+
+        fetch(`${BASE_URL}/users`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify(userData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Käyttäjän luonti epäonnistui: " + response.status);
+            }
+
+            alert("Käyttäjä luotu!");
+            loadUsers();
+        })
+        .catch(error => {
+            alert("Virhe käyttäjän luonnissa.");
+            console.error(error);
         });
     }
 </script>

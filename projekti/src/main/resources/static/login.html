@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fi"> 
+<head>
+    <meta charset="UTF-8">
+    <title>TicketGuru - Kirjautuminen</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .topbar {
+            width: 100%;
+            background-color: #2c7be5;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #2c7be5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1a68d1;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">TicketGuru</div>
+
+<div class="container">
+    <h2>🔐 Kirjaudu sisään</h2>
+
+    <input type="text" placeholder="Käyttäjätunnus" id="username">
+    <input type="password" placeholder="Salasana" id="password">
+
+    <button onclick="login()">Kirjaudu</button>
+
+    <p id="error" class="error"></p>
+</div>
+
+<script>
+const BASE_URL = window.location.origin + "/api";
+
+function login() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const token = btoa(username + ":" + password);
+
+    fetch(`${BASE_URL}/events`, {
+        headers: {
+            "Authorization": "Basic " + token
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            localStorage.setItem("auth", token);
+            localStorage.setItem("username", username);
+
+            window.location.href = "/index.html";
+        } else {
+            document.getElementById("error").innerText =
+                "Väärä käyttäjätunnus tai salasana.";
+        }
+    })
+    .catch(error => {
+        document.getElementById("error").innerText =
+            "Yhteys palvelimeen epäonnistui.";
+        console.error(error);
+    });
+}
+</script>
+
+</body>
+</html>
